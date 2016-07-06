@@ -2,7 +2,6 @@
 
 clc; clear;
 clear all;
-addpath TrajOpt-master
 
    
 mRocket = 27000; %(kg)  %Total lift-off mass
@@ -23,17 +22,17 @@ gamma0_prepitch = 1.5708;
 
 phase = 'prepitch';
 tspan = [1:15];
-y0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch];
+y0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch, 0];
 
 [y] = lsode(@(y,t) rocketDynamics(y,0,phase), y0, tspan);  
-
+ 
 
 
 phase = 'postpitch';
-Tratio = .94;
-tspan = [0:(y(end,3)-(mEmpty+mSpartan))/(Tratio*60*Tmax/200000)];
- postpitch0 = [y(end,1), y(end,2), y(end,3), 1.55334];
-[postpitch] = lsode(@(postpitch,t) rocketDynamics(postpitch,Tratio*Tmax,phase), postpitch0, tspan);
+tspan = [0:(y(end,3)-(mEmpty+mSpartan))/(60*Tmax/200000)];
+postpitch0 = [y(end,1), y(end,2), y(end,3), 1.55334, 0];
+dalphadt = 0;
+[postpitch] = lsode(@(postpitch,t) rocketDynamics(postpitch,dalphadt,phase), postpitch0, tspan);
 
 y
 postpitch

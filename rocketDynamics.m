@@ -1,17 +1,17 @@
 function dz = rocketDynamics(z,u,phase)
-
+dalphadt = u(1,:);
 
 h = z(1,:);   %Height
 v = z(2,:);   %Velocity
 m = z(3,:);   %Mass
 gamma = z(4,:);
-
+alpha = z(5,:);
 
 if isnan(gamma)
     gamma = 1.5708;
 end
 
-% T = u(1,:);        %Thrust
+
 T = 460000;
 
 density = 1.474085291*(0.9998541833.^h);  %Data fit off of wolfram alpha
@@ -37,11 +37,10 @@ g = G*mEarth./((h+rEarth).^2);
 
 %%%% Complete the calculation:
 global Tmax
-% dm = -60*ones(1,length(h)).*T/Tmax.*Tmax/200000;   %mass rate
 dm = -160*ones(1,length(h)).*T/Tmax;
 
-% alpha = 0*ones(1,length(h));
-alpha = u(1,:);
+
+
 
 xi = 0*ones(1,length(h));
 phi = 0*ones(1,length(h));
@@ -63,6 +62,6 @@ if isnan(dgamma)
 dgamma = 0;
 end
 
-dz = [dr;dv;dm;dgamma];
+dz = [dr;dv;dm;dgamma;dalphadt];
 
 end
