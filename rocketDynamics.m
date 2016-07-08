@@ -1,4 +1,5 @@
 function dz = rocketDynamics(z,u,phase)
+
 dalphadt = u(1,:);
 
 h = z(1,:);   %Height
@@ -37,8 +38,14 @@ g = G*mEarth./((h+rEarth).^2);
 
 %%%% Complete the calculation:
 global Tmax
-dm = -160*ones(1,length(h)).*T/Tmax;
-
+switch phase
+  case 'prepitch'
+  dm = -160*ones(1,length(h)).*T/Tmax;
+  case 'postpitch'
+  dm = -160*ones(1,length(h)).*T/Tmax;
+  case 'secondstage'
+  dm = 0*ones(1,length(h));
+end
 
 
 
@@ -53,6 +60,7 @@ switch phase
     gamma = 1.5708*ones(1,length(h)); % Control Trajectory Angle 
     case 'postpitch'
     %Do nothing
+    case 'secondstage'
 end
 
 

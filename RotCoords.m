@@ -16,6 +16,9 @@ switch phase
     gammadot = 0*ones(1,length(gamma)); % Control Trajectory Angle 
     case 'postpitch'
     gammadot = T.*sin(alpha)./(m.*v) + (v./r - mu_E./(r.^2.*v)).*cos(gamma) + L./(m.*v) + cos(phi).*(2.*omega_E.*cos(zeta) + omega_E.^2.*r./v.*(cos(phi).*cos(gamma)+sin(phi).*sin(gamma).*sin(zeta)));
+    case 'secondstage'
+    gammadot = T.*sin(alpha)./(m.*v) + (v./r - mu_E./(r.^2.*v)).*cos(gamma) + L./(m.*v) + cos(phi).*(2.*omega_E.*cos(zeta) + omega_E.^2.*r./v.*(cos(phi).*cos(gamma)+sin(phi).*sin(gamma).*sin(zeta)));
+
 end
 
 

@@ -26,7 +26,9 @@ y0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch, 0];
 
 [y] = lsode(@(y,t) rocketDynamics(y,0,phase), y0, tspan);  
  
-
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+%                        Post-Pitchover Simulation                        %
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
 phase = 'postpitch';
 tspan = [0:(y(end,3)-(mEmpty+mSpartan))/(60*Tmax/200000)];
@@ -34,14 +36,68 @@ postpitch0 = [y(end,1), y(end,2), y(end,3), 1.55334, 0];
 dalphadt = 0;
 [postpitch] = lsode(@(postpitch,t) rocketDynamics(postpitch,dalphadt,phase), postpitch0, tspan);
 
-y
-postpitch
-postpitch(end,4)
+y;
+postpitch;
+postpitch(end,4);
+
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+%                        Stage 2                                          %
+%~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+
+global initialdynamics
+initialdynamics = postpitch(end,:);
+global timenodes
+timenodes = [0:10:100];
 
 
 
 
+function [v23 alphaend SecondStageDynamics] = SecondStage(dalphadt)
 
+phase = 'secondstage';
+
+global initialdynamics
+global timenodes
+
+dynamics0 = initialdynamics;
+
+SecondStageDynamics(1,:) = dynamics0;
+
+for i = 1:length(timenodes)-1
+
+tspan = timenodes(i):timenodes(i+1);
+
+[dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,dalphadt(i),phase), dynamics0, tspan);
+
+dynamics0 = dynamics(end,:);
+
+SecondStageDynamics(i+1,:) = dynamics(end,:);
+
+end
+
+v23 = -SecondStageDynamics(end,2); % negative, so that minimiser gives maximum
+
+alphaend = SecondStageDynamics(end,5);
+
+endfunction
+
+function v23 = velocity23(dalphadt)
+
+[v23 alphaend SecondStageDynamics] = SecondStage(dalphadt);
+
+endfunction
+
+function alphaend = alpha23(dalphadt)
+
+[v23 alphaend SecondStageDynamics] = SecondStage(dalphadt);
+
+endfunction
+
+
+x0 = zeros(1,10);
+[x, obj, info, iter, nf, lambda] = sqp (x0, @velocity23, @alpha23, [], -0.01, 0.01);
+
+[v23 alphaend SecondStageDynamics] = SecondStage(x);
 
 %
 %% Forward Simulation ======================================================
