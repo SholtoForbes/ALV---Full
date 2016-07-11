@@ -4,13 +4,20 @@ clc; clear;
 clear all;
 
    
-mRocket = 27000; %(kg)  %Total lift-off mass
-mFuel = 0.8*mRocket;  %(kg)  %mass of the fuel
-mSpartan = 8755.1;
-mTotal = mSpartan + mRocket;
-mEmpty = mRocket-mFuel;  %(kg)  %mass of the rocket (without fuel)
-global Tmax
-Tmax = 460000;
+   
+mFirstStage = 480; %(kg)  %Total lift-off mass
+mFirstStageFuel = 1600;  %(kg)  %mass of the fuel
+mSecondStage = 228;
+mSecondStageFuel = 930;
+mThirdStage = 40;
+mThirdStageFuel = 145;
+mPayload = 18 + 7;
+
+mTotal = mFirstStage*4 + mFirstStageFuel*4 + mSecondStage + mSecondStageFuel + mThirdStage + mThirdStageFuel + mPayload;
+
+mdotFirstStage = 16.39;
+mdotSecondStage = 3.952;
+
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Pre-Pitchover Simulation                         %
@@ -21,7 +28,7 @@ m0_prepitch = mTotal;  %Rocket starts full of fuel
 gamma0_prepitch = 1.5708;
 
 phase = 'prepitch';
-tspan = [1:15];
+tspan = [0:15];
 y0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch, 0];
 
 [y] = lsode(@(y,t) rocketDynamics(y,0,phase), y0, tspan);  
@@ -31,7 +38,7 @@ y0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch, 0];
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
 phase = 'postpitch';
-tspan = [0:(y(end,3)-(mEmpty+mSpartan))/(60*Tmax/200000)];
+tspan = [15:mFirstStageFuel*4/(mdotFirstStage*4)];
 postpitch0 = [y(end,1), y(end,2), y(end,3), 1.55334, 0];
 dalphadt = 0;
 [postpitch] = lsode(@(postpitch,t) rocketDynamics(postpitch,dalphadt,phase), postpitch0, tspan);
@@ -39,16 +46,19 @@ dalphadt = 0;
 y;
 postpitch;
 postpitch(end,4);
-
+%
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Stage 2                                          %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 
 global initialdynamics
-initialdynamics = postpitch(end,:);
-global timenodes
-timenodes = [0:10:100];
+initialdynamics = [postpitch(end,1) postpitch(end,2) postpitch(end,3)-mFirstStage*4 postpitch(end,4) postpitch(end,5)];
 
+
+global timenodes
+timenodes = [0:30:mSecondStageFuel/mdotSecondStage];
+timenodes(end) = mSecondStageFuel/mdotSecondStage
+n = floor(mSecondStageFuel/mdotSecondStage/30);
 
 
 
@@ -94,10 +104,14 @@ function alphaend = alpha23(dalphadt)
 endfunction
 
 
-x0 = zeros(1,10);
+x0 = zeros(1,n);
 [x, obj, info, iter, nf, lambda] = sqp (x0, @velocity23, @alpha23, [], -0.01, 0.01);
 
 [v23 alphaend SecondStageDynamics] = SecondStage(x);
+
+
+
+
 
 %
 %% Forward Simulation ======================================================

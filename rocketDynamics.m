@@ -12,23 +12,39 @@ if isnan(gamma)
     gamma = 1.5708;
 end
 
+FirstStageThrust = dlmread('FirstStageThrust.txt');
+SecondStageThrust = dlmread('SecondStageThrust.txt');
+ThirdStageThrust = dlmread('ThirdStageThrust.txt');
 
-T = 460000;
+switch phase
+case 'prepitch'
+  T = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),h/1000)*1000*3*4;
+  case 'postpitch'
+  T = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),h/1000)*1000*3*4;
+  case 'secondstage'
+  T = interp1(SecondStageThrust(:,1),SecondStageThrust(:,6),h/1000)*1000*4;
+end
+
 
 density = 1.474085291*(0.9998541833.^h);  %Data fit off of wolfram alpha
 
-
-A1 = 0.0095;
-A2 = 25;
-A3 = 0.953;
-A4 = 0.036;
 speedOfSound = 280;  %(m/s)  %At 10 km altitude
 mach = v/speedOfSound;
-Cd = A1*atan(A2*(mach-A3))+A4;
+
+switch phase
+case 'prepitch'
+  A = .28 + 4*0.5; % Reference Area of first stage with 4 boosters, each booster is 0.5 and core stage is 0.28 (m^2);
+  case 'postpitch'
+  A = .28 + 4*0.5; % Reference Area of first stage with 4 boosters, each booster is 0.5 and core stage is 0.28 (m^2);
+  case 'secondstage'
+  A = 0.28;
+end
 
 %%%% Compute the drag:
-Area = pi*3.66;  %(m^2) cross-sectional area (SpaceX F9 Falcon)
-D = 0.5*Cd.*Area.*density.*v.^2;
+AeroCoeffs = dlmread('AeroCoeffs.txt');
+
+Cd = interp1(AeroCoeffs(:,1),AeroCoeffs(:,2),mach);
+D = 0.5*Cd.*A.*density.*v.^2;
 
 %%%% Compute gravity from inverse-square law:
 rEarth = 6.3674447e6;  %(m) radius of earth
@@ -36,24 +52,19 @@ mEarth = 5.9721986e24;  %(kg) mass of earth
 G = 6.67e-11; %(Nm^2/kg^2) gravitational constant
 g = G*mEarth./((h+rEarth).^2);
 
-%%%% Complete the calculation:
-global Tmax
 switch phase
   case 'prepitch'
-  dm = -160*ones(1,length(h)).*T/Tmax;
+  dm = -16.39*4;
   case 'postpitch'
-  dm = -160*ones(1,length(h)).*T/Tmax;
+  dm = -16.39*4;
   case 'secondstage'
-  dm = 0*ones(1,length(h));
+  dm = -3.952;
 end
-
-
 
 xi = 0*ones(1,length(h));
 phi = 0*ones(1,length(h));
 zeta = 0*ones(1,length(h));
 L = 0*ones(1,length(h));
-
 
 switch phase
     case 'prepitch'
@@ -61,6 +72,7 @@ switch phase
     case 'postpitch'
     %Do nothing
     case 'secondstage'
+    %Do nothing
 end
 
 
