@@ -23,6 +23,8 @@ case 'prepitch'
   T = interp1(FirstStageThrust(:,1),FirstStageThrust(:,6),h/1000)*1000*3*4;
   case 'secondstage'
   T = interp1(SecondStageThrust(:,1),SecondStageThrust(:,6),h/1000)*1000*4;
+  case 'thirdstage'
+  T = interp1(ThirdStageThrust(:,1),ThirdStageThrust(:,6),h/1000)*1000*2;
 end
 
 
@@ -37,6 +39,8 @@ case 'prepitch'
   case 'postpitch'
   A = .28 + 4*0.5; % Reference Area of first stage with 4 boosters, each booster is 0.5 and core stage is 0.28 (m^2);
   case 'secondstage'
+  A = 0.28;
+  case 'thirdstage'
   A = 0.28;
 end
 
@@ -59,6 +63,8 @@ switch phase
   dm = -16.39*4;
   case 'secondstage'
   dm = -3.952;
+  case 'thirdstage'
+  dm = -0.4744;
 end
 
 xi = 0*ones(1,length(h));
@@ -73,6 +79,8 @@ switch phase
     %Do nothing
     case 'secondstage'
     %Do nothing
+    case 'thirdstage'
+    %Do nothing
 end
 
 
@@ -81,6 +89,7 @@ end
 if isnan(dgamma)
 dgamma = 0;
 end
+
 
 dz = [dr;dv;dm;dgamma;dalphadt];
 
