@@ -8,6 +8,18 @@ m = z(3,:);   %Mass
 gamma = z(4,:);
 alpha = z(5,:);
 
+
+xi = z(6,:);
+phi = z(7,:);
+zeta = z(8,:);
+L = 0*ones(1,length(h));
+
+%xi = 0*ones(1,length(h));
+%phi = 0*ones(1,length(h));
+%zeta = 0*ones(1,length(h));
+%L = 0*ones(1,length(h));
+
+
 if isnan(gamma)
     gamma = 1.5708;
 end
@@ -67,10 +79,7 @@ switch phase
   dm = -0.4744;
 end
 
-xi = 0*ones(1,length(h));
-phi = 0*ones(1,length(h));
-zeta = 0*ones(1,length(h));
-L = 0*ones(1,length(h));
+
 
 switch phase
     case 'prepitch'
@@ -86,11 +95,18 @@ end
 
 [dr,dxi,dphi,dgamma,dv,dzeta] = RotCoords(h+rEarth,xi,phi,gamma,v,zeta,L,D,T,m,alpha,phase);
 
-if isnan(dgamma)
-dgamma = 0;
+switch phase
+    case 'prepitch'
+    dgamma = 0;
+    dzeta = 0;
+    case 'postpitch'
+    %Do nothing
+    case 'secondstage'
+    %Do nothing
+    case 'thirdstage'
+    %Do nothing
 end
 
-
-dz = [dr;dv;dm;dgamma;dalphadt];
+dz = [dr;dv;dm;dgamma;dalphadt;dxi;dphi;dzeta];
 
 end
