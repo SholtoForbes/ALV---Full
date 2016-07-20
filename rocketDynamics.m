@@ -1,6 +1,6 @@
-function dz = rocketDynamics(z,u,phase)
+function dz = rocketDynamics(z,t,u,phase,tspan)
 
-dalphadt = u(1,:);
+
 
 h = z(1,:);   %Height
 
@@ -15,6 +15,12 @@ xi = z(6,:);
 phi = z(7,:);
 zeta = z(8,:);
 L = 0*ones(1,length(h));
+
+%dalphadt = (u(1,:)-alpha)/(tspan(end) - tspan(1));
+
+B = tan(alpha);
+A = (tan(u(1,:)) - tan(alpha))/(tspan(end) - tspan(1));
+dalphadt = A/((A*(t-tspan(1))+B)^2+1);
 
 %xi = 0*ones(1,length(h));
 %phi = 0*ones(1,length(h));

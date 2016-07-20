@@ -27,7 +27,7 @@ Guess = answer{11};
 if strcmp(Guess,'Auto') == 1
   % Automatically compute the best guess of constant pitch change rate over range of allowable solutions
   n=1;
-  for i = -0.002:0.0002:0.000
+  for i = -0.3:0.05:0.300
     StageDynamics = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,i,'noOpt');
     diff(n,1) = StageDynamics(end,1) - rTarget;
     diff(n,2) = i;
@@ -44,15 +44,15 @@ end
 
 % Call Optimisaion Function ----------------------------------------------------
 
-[StageDynamics tspan1 prepitch tspan2 postpitch] = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,Guess,'Opt');
+[StageDynamics x tspan1 prepitch tspan2 postpitch] = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,Guess,'Opt');
 
 
 % Polynomial Output ------------------------------------------------------------
 % Fits a Polynomial to the optimal trajectory
 
-printf('Polynomial fit of optimal trajectory, coefficients:');
-fflush(stdout);
-p = polyfit(StageDynamics(:,9),StageDynamics(:,1),5)
+%printf('Polynomial fit of optimal trajectory, coefficients:');
+%fflush(stdout);
+%p = polyfit(StageDynamics(:,9),StageDynamics(:,1),5)
 
 % Calculate Runtime
 t2 = cputime;

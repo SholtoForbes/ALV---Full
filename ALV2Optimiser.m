@@ -1,7 +1,7 @@
 % Created by Sholto Forbes 15/7/16
 % Single shooting routine for the calculation of ALV-2 orbital trajectories
 
-function [StageDynamics tspan1 prepitch tspan2 postpitch] = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,Guess, optim)
+function [StageDynamics x tspan1 prepitch tspan2 postpitch] = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,Guess, optim)
 
 h0_prepitch = icond.h0_prepitch;
 xi0_prepitch = icond.xi0_prepitch;
@@ -39,7 +39,7 @@ phase = 'prepitch';
 tspan1 = [0:prepitch_time]; % prepitch time 
 prepitch0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch, 0, xi0_prepitch, phi0_prepitch, zeta0_prepitch];
 
-[prepitch] = lsode(@(prepitch,t) rocketDynamics(prepitch,0,phase), prepitch0, tspan1);  
+[prepitch] = lsode(@(prepitch,t) rocketDynamics(prepitch,t,0,phase,tspan1), prepitch0, tspan1);  
  
 printf('Complete    ')
 fflush(stdout);
@@ -56,7 +56,7 @@ tspan2(end) = mFirstStageFuel*4/(mdotFirstStage*4);
 postpitch0 = [prepitch(end,1), prepitch(end,2), prepitch(end,3), pi/2-pitchover_angle, 0, prepitch(end,6), prepitch(end,7), prepitch(end,8)];
 dalphadt = 0; % gravity turn, AoA=0
 
-[postpitch] = lsode(@(postpitch,t) rocketDynamics(postpitch,dalphadt,phase), postpitch0, tspan2);
+[postpitch] = lsode(@(postpitch,t) rocketDynamics(postpitch,t,dalphadt,phase,tspan2), postpitch0, tspan2);
 
  printf('Complete    ')
  fflush(stdout);
@@ -98,7 +98,7 @@ switch optim % allows routine to be run without optimisation for initial guess c
    fflush(stdout);
   % SQP --------------------------------------------------------------------------
   % This is the main optimisation routine utilising Sequential Quadratic Programming
-  [x, obj, inform, iter, nf, lambda] = sqp (x0, @velocityend, @const, @inequalities, -0.01, 0.01, 100, 1);
+  [x, obj, inform, iter, nf, lambda] = sqp (x0, @cost, @const, @inequalities, -0.4, 0.4, 100, 1);
 
   
 
@@ -108,7 +108,8 @@ switch optim % allows routine to be run without optimisation for initial guess c
   case 'noOpt'
   printf('Second and Third Stage Running    ')
   fflush(stdout);
-  [StageDynamics] = Stages(x0);
+  x = x0;
+  [StageDynamics] = Stages(x);
 end
 printf('Complete    ')
   fflush(stdout);
@@ -132,11 +133,11 @@ StageDynamics = [dynamics0 secondstagetimenodes(1)]; % add time storage
 % Break down each segment of constant dAlpha/dt into 1 second intervals
 for i = 1:length(secondstagetimenodes)-1 
 
-tspan = secondstagetimenodes(i):secondstagetimenodes(i+1);
+tspan = [secondstagetimenodes(i) secondstagetimenodes(i+1)];
 
 % Calculate dynamics over each segment
 %lsode_options ("minimum step size", .001);
-[dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,dalphadt(i),phase), dynamics0, tspan);
+[dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,t,dalphadt(i),phase,tspan), dynamics0, tspan);
 
 
 dynamics0 = dynamics(end,:);
@@ -162,11 +163,11 @@ global thirdstagetimenodes
 % Break down each segment of constant dAlpha/dt into 1 second intervals
 for i = 1:length(thirdstagetimenodes)-1
 
-tspan = thirdstagetimenodes(i):thirdstagetimenodes(i+1);
+tspan = [thirdstagetimenodes(i) thirdstagetimenodes(i+1)];
 
 % Calculate dynamics over each segment
 %lsode_options ("maximum order", 1);
-[dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,dalphadt(i+length(secondstagetimenodes)-1),phase), dynamics0, tspan);
+[dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,t,dalphadt(i+length(secondstagetimenodes)-1),phase,tspan), dynamics0, tspan);
 
 dynamics0 = dynamics(end,:); 
 
@@ -186,11 +187,14 @@ endfunction
 %% these simply return specific outputs that the SQP function requires
 
 % Function to call velocity, used to maximise 
-function vend = velocityend(dalphadt)
+function vend = cost(dalphadt)
 
 [StageDynamics] = Stages(dalphadt);
 
-vend = -StageDynamics(end,2);
+hend = StageDynamics(end,1);
+global rTarget
+%vend = -StageDynamics(end,2) + 10*abs(hend-rTarget);
+vend = -StageDynamics(end,2) ;
 
 endfunction
 

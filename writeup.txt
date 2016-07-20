@@ -29,8 +29,9 @@ For a single shooting approach, SQP provides the maximum velocity attainable at 
 
  The Program
 
-The optimisation program will put the ALV-2 at a given altitude, at 0 degree trajectory inclination, with maximum velocity. Note that this does not 
-mean that the ALV-2 will necessarily achieve orbital velocity!  
+The optimisation program will find a sequence of angle of attack values at discrete timepoints to reach a given altitude, at 0 degree trajectory inclination, with maximum velocity. Note that this does not 
+mean that the ALV-2 will necessarily achieve orbital velocity! 
+These angle of attack values are transitioned between using linear tangent guidance.
 
 Inputs:
 Launch Location
