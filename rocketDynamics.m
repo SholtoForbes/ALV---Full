@@ -3,6 +3,8 @@ function dz = rocketDynamics(z,u,phase)
 dalphadt = u(1,:);
 
 h = z(1,:);   %Height
+
+
 v = z(2,:);   %Velocity
 m = z(3,:);   %Mass
 gamma = z(4,:);
@@ -97,16 +99,36 @@ end
 
 switch phase
     case 'prepitch'
-    dgamma = 0;
-    dzeta = 0;
+    dz = [dr;dv;dm;0;dalphadt;dxi;dphi;0];
     case 'postpitch'
-    %Do nothing
+    dz = [dr;dv;dm;dgamma;dalphadt;dxi;dphi;dzeta];
     case 'secondstage'
-    %Do nothing
+    dz = [dr;dv;dm;dgamma;dalphadt;dxi;dphi;dzeta];
+    if h < 0 % This section limits the simulation from straying into computationally bad territory
+    dz = zeros(8,1);
+    elseif h > 1000000
+    dz = zeros(8,1);
+    elseif gamma < -1.57
+    dz = zeros(8,1);
+    elseif gamma > 1.57
+    dz = zeros(8,1);
+    end
     case 'thirdstage'
-    %Do nothing
+    dz = [dr;dv;dm;dgamma;dalphadt;dxi;dphi;dzeta];
+    if h < 0
+      dz = zeros(8,1);
+    elseif h > 1000000
+      dz = zeros(8,1);
+    elseif gamma < -1.57
+    dz = zeros(8,1);
+    elseif gamma > 1.57
+    dz = zeros(8,1);
+    end
+    
+    
+    
+    
 end
 
-dz = [dr;dv;dm;dgamma;dalphadt;dxi;dphi;dzeta];
 
 end
