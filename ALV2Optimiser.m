@@ -24,7 +24,6 @@ mdotFirstStage = 16.39;
 mdotSecondStage = 3.952;
 mdotThirdStage = 0.4744;
 
-
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Pre-Pitchover Simulation                         %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
@@ -34,13 +33,13 @@ fflush(stdout);
 v0_prepitch = 0;  %Rocket starts stationary
 m0_prepitch = mTotal;  %Rocket starts full of fuel
 
-
 phase = 'prepitch';
 tspan1 = [0:prepitch_time]; % prepitch time 
 prepitch0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch, 0, xi0_prepitch, phi0_prepitch, zeta0_prepitch];
 
 [prepitch] = lsode(@(prepitch,t) rocketDynamics(prepitch,t,0,phase,tspan1), prepitch0, tspan1);  
  
+
 printf('Complete    ')
 fflush(stdout);
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
@@ -58,8 +57,8 @@ dalphadt = 0; % gravity turn, AoA=0
 
 [postpitch] = lsode(@(postpitch,t) rocketDynamics(postpitch,t,dalphadt,phase,tspan2), postpitch0, tspan2);
 
- printf('Complete    ')
- fflush(stdout);
+printf('Complete    ')
+fflush(stdout);
  
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Stage 2 + 3                                      %
@@ -94,29 +93,26 @@ x0 = zeros(1,n2+n3)+Guess;
   
 switch optim % allows routine to be run without optimisation for initial guess checking
   case 'Opt'
-   printf('Single Shooting Optimiser Running    ')
-   fflush(stdout);
-  % SQP --------------------------------------------------------------------------
-  % This is the main optimisation routine utilising Sequential Quadratic Programming
-  [x, obj, inform, iter, nf, lambda] = sqp (x0, @cost, @const, @inequalities, -0.4, 0.4, 100, 1);
-
-  
-
-  %Forward Simulation
-  [StageDynamics] = Stages(x);
+     printf('Single Shooting Optimiser Running    ')
+     fflush(stdout);
+     
+    % SQP --------------------------------------------------------------------------
+    % This is the main optimisation routine utilising Sequential Quadratic Programming
+    [x, obj, inform, iter, nf, lambda] = sqp (x0, @cost, @const, @inequalities, -0.4, 0.4, 100, 1e-04);
+    
+    %Forward Simulation
+    [StageDynamics] = Stages(x);
 
   case 'noOpt'
-  printf('Second and Third Stage Running    ')
-  fflush(stdout);
-  x = x0;
-  [StageDynamics] = Stages(x);
-end
-printf('Complete    ')
+    printf('Second and Third Stage Running    ')
+    fflush(stdout);
+    x = x0;
+    [StageDynamics] = Stages(x);
+  end
+  printf('Complete    ')
   fflush(stdout);
 
 endfunction
-
-
 
 function [StageDynamics] = Stages(dalphadt)
 
@@ -133,17 +129,16 @@ StageDynamics = [dynamics0 secondstagetimenodes(1)]; % add time storage
 % Break down each segment of constant dAlpha/dt into 1 second intervals
 for i = 1:length(secondstagetimenodes)-1 
 
-tspan = [secondstagetimenodes(i) secondstagetimenodes(i+1)];
+  tspan = [secondstagetimenodes(i) secondstagetimenodes(i+1)];
 
-% Calculate dynamics over each segment
-%lsode_options ("minimum step size", .001);
-[dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,t,dalphadt(i),phase,tspan), dynamics0, tspan);
+  % Calculate dynamics over each segment
+  %lsode_options ("minimum step size", .001);
+  [dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,t,dalphadt(i),phase,tspan), dynamics0, tspan);
 
+  dynamics0 = dynamics(end,:);
 
-dynamics0 = dynamics(end,:);
-
-% Store dynamics
-StageDynamics = [StageDynamics;[dynamics transpose(tspan)]];
+  % Store dynamics
+  StageDynamics = [StageDynamics;[dynamics transpose(tspan)]];
 
 end
 
@@ -163,20 +158,16 @@ global thirdstagetimenodes
 % Break down each segment of constant dAlpha/dt into 1 second intervals
 for i = 1:length(thirdstagetimenodes)-1
 
-tspan = [thirdstagetimenodes(i) thirdstagetimenodes(i+1)];
+  tspan = [thirdstagetimenodes(i) thirdstagetimenodes(i+1)];
+  % Calculate dynamics over each segment
+  [dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,t,dalphadt(i+length(secondstagetimenodes)-1),phase,tspan), dynamics0, tspan);
 
-% Calculate dynamics over each segment
-%lsode_options ("maximum order", 1);
-[dynamics] = lsode(@(dynamics,t) rocketDynamics(dynamics,t,dalphadt(i+length(secondstagetimenodes)-1),phase,tspan), dynamics0, tspan);
+  dynamics0 = dynamics(end,:); 
 
-dynamics0 = dynamics(end,:); 
-
-% Store dynamics
-StageDynamics = [StageDynamics;[dynamics transpose(tspan)]];
-
+  % Store dynamics
+  StageDynamics = [StageDynamics;[dynamics transpose(tspan)]];
 
 end
-
 
 printf('End Altitude Achieved')
 disp(StageDynamics(end,1));
@@ -188,35 +179,27 @@ endfunction
 
 % Function to call velocity, used to maximise 
 function vend = cost(dalphadt)
-
-[StageDynamics] = Stages(dalphadt);
-
-hend = StageDynamics(end,1);
-global rTarget
-%vend = -StageDynamics(end,2) + 10*abs(hend-rTarget);
-vend = -StageDynamics(end,2) ;
-
+  [StageDynamics] = Stages(dalphadt);
+  hend = StageDynamics(end,1);
+  global rTarget
+  vend = -StageDynamics(end,2) ;
 endfunction
 
 % Function to call altitude - target altitude, to constrain end altitude
 function constraints = const(dalphadt)
-
-[StageDynamics] = Stages(dalphadt);
-
-hend = StageDynamics(end,1);
-
-global rTarget
-constraints = [hend-rTarget];
-
+  [StageDynamics] = Stages(dalphadt);
+  hend = StageDynamics(end,1);
+  global rTarget
+%  constraints = [hend-rTarget];
+  constraints = [hend-rTarget StageDynamics(end,4)];
 endfunction
 
 % function to define maximum altitude, this helps to guide the rocket into the correct orbital position
 function ineq = inequalities(dalphadt)
-
-[StageDynamics] = Stages(dalphadt);
-global rTarget
-ineq = [-StageDynamics(:,1)+rTarget];
-%; StageDynamics(:,5)+15*pi/180; -StageDynamics(:,5)+15*pi/180
+  [StageDynamics] = Stages(dalphadt);
+  global rTarget
+  ineq = [-StageDynamics(:,1)+rTarget+1];
+  %; StageDynamics(:,5)+15*pi/180; -StageDynamics(:,5)+15*pi/180
 endfunction
 
 

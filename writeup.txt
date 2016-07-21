@@ -29,6 +29,7 @@ For a single shooting approach, SQP provides the maximum velocity attainable at 
 
  The Program
 
+
 The optimisation program will find a sequence of angle of attack values at discrete timepoints to reach a given altitude, at 0 degree trajectory inclination, with maximum velocity. Note that this does not 
 mean that the ALV-2 will necessarily achieve orbital velocity! 
 These angle of attack values are transitioned between using linear tangent guidance.
@@ -41,8 +42,26 @@ Target Altitude
 prepitch Time - The time of flight before pitching (s)
 Pitchover Angle - Specified pitch angle (deg)
 Guess - Initial guess of pitch change rate to provide to the SQP solver, 'Auto' will run a range of constant pitch change rates and choose the end result closest to the desired altitude as an initial guess
+NOTE: if your guess is too wrong, the solver may be forced into a local minimum which will give a nonsensical solution (it is also possible that the auto guess function may cause this in some cases). If the solution is nonsensical pick a sensible guess, which you can check using the first simulated end altitude. 
+Pitchover Angle Optimisation YES/NO - choose if pitchover angle is implemented. If YES values between 1 and 5 degrees pitchover angle will be tested in 0.5 degree increments, and the best end velocity chosen. This is very time consuming due to the lack of parallel capability of Octave (in windows there is none at all). 
+
+During the program runtime, the current stage of simulation will be printed, along with the altitude achieved at the end of each simulation step, which will slowly converge on the target altitude. 
+This will most of the time be repeated values and may jump up or down drastically, this is normal for an SQP optimiser.
 
 
+Outputs:
+the matrix StageDynamics will be created, which contains, by column
+height (above earth) (m)
+velocity (m/s)
+mass (kg)
+flight path angle (rad)
+angle of attack (rad)
+longitude (rad)
+latitude (rad)
+heading angle (rad)
 
-During the program runtime, the current stage of simulation will be printed, along with the altitude achieved at the end of each simulation step, which can be used as a general guide to how the optimiser is doing. 
-This will most of the time be repeated values, this is normal for an SQP optimiser.
+A plot will be generated, as well as a polynomial fit of the pitch angle (angle of attack + flight path angle).
+
+Common error:
+
+- The SQP colver throws an error due to an infeasible QP subproblem. This means that the initial guess put the SQP solver in a hard to solve position, and Octave does not deal well with this (seems like a known deficiency). A change in initial guess, manually input, may work. 
