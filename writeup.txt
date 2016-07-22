@@ -37,9 +37,9 @@ These angle of attack values are transitioned between using linear tangent guida
 Inputs:
 Launch Location
 Target Altitude
-2nd, 3rd Stage Node Spacing - This is the separation of the nodes of discretised control. ie. the control will be constant for intervals of this value (see Single Shooting Method). 
+2nd, 3rd Stage Node Spacing - This is the separation of the nodes of discretised control. ie. the control will be constant for time intervals of this length (see Single Shooting Method). 
 				Making this smaller will result in higher accuracy, but longer computation time. Numerical instability can result from having this be too small OR too large! But there is no hard and fast rule to follow, if in doubt leave the default values.
-prepitch Time - The time of flight before pitching (s)
+Prepitch Time - The time of flight before pitching (s)
 Pitchover Angle - Specified pitch angle (deg)
 Guess - Initial guess of pitch change rate to provide to the SQP solver, 'Auto' will run a range of constant pitch change rates and choose the end result closest to the desired altitude as an initial guess
 NOTE: if your guess is too wrong, the solver may be forced into a local minimum which will give a nonsensical solution (it is also possible that the auto guess function may cause this in some cases). If the solution is nonsensical pick a sensible guess, which you can check using the first simulated end altitude. 
@@ -60,8 +60,9 @@ longitude (rad)
 latitude (rad)
 heading angle (rad)
 
-A plot will be generated, as well as a polynomial fit of the pitch angle (angle of attack + flight path angle).
+A plot will be generated, as well as p, the polynomial fit of the pitch angle (angle of attack + flight path angle) and gammadot1, the pitching rate of the first stage after pitchover.
 
-Common error:
+Common errors:
 
 - The SQP colver throws an error due to an infeasible QP subproblem. This means that the initial guess put the SQP solver in a hard to solve position, and Octave does not deal well with this (seems like a known deficiency). A change in initial guess, manually input, may work. 
+- Solver converges to an obviously wrong solution. Initial guess is bad, or the problem is not well defined ie. the dynamics of the system are somehow illogical or the rocket cannot reach the desired end point. 

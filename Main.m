@@ -1,5 +1,6 @@
 % Main ALV-2 Trajectory optimisation Routine
 clear all
+clc
 t1 = cputime;
 
 prompt = {'Launch Altitude (km)','Launch Longitude (deg)','Launch Latitude (deg)', 'Launch Angle (deg)', 'Launch Heading Angle (deg)', 'Target Altitude (km)', 'Second Stage Node Spacing (s)','Third Stage Node Spacing (s)', 'Pre-Pitchover Flight Time (s)', 'Pitchover Angle (deg)','Guess Pitching Angle rad', 'Pitching Angle Optimisation'};
@@ -27,13 +28,13 @@ PAO = answer{12}; % Pitching angle optimisation, YES or NO
 
 if strcmp(Guess,'Auto') == 1 % Automatically compute the best guess of constant pitch change rate over range of allowable solutions
   n=1;
-  for i = -0.3:0.05:0.200
-    StageDynamics = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,i,'noOpt');
+  for i = -0.3:0.05:0.200 % guess AoA ranga
+    StageDynamics = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,i,'noOpt'); 
     diff(n,1) = StageDynamics(end,1) - rTarget;
     diff(n,2) = i;
     n = n+1;
   end
-  [diff_min,n_min] = min(abs(diff(:,1)));
+  [diff_min,n_min] = min(abs(diff(:,1))); % choose the guess that puts the end of the trajectory closest to target altitude
   Guess = diff(n_min,2);
 else
   Guess = str2num(answer{11}); %Input Guess Pitching Angle, rad
@@ -59,13 +60,19 @@ elseif strcmp(PAO,'YES') == 1 % No pitching angle optimisation
     end
   end
 end
-  
-  % Polynomial Output ------------------------------------------------------------
-% Fits a Polynomial to the optimal trajectory
 
-%printf('Polynomial fit of optimal trajectory, coefficients:');
-%fflush(stdout);
-%p = polyfit(StageDynamics(:,9),StageDynamics(:,1),5)
+% Guidance Output ------------------------------------------------------------
+% Numerical Differentiation of pitching angle, to obtain first stage pitch rate
+gammadot1(:,1) = tspan2(1:end-1);
+for i = 1:length(tspan2)-1
+  gammadot1(i,2) = (postpitch(i+1,4) - postpitch(i,4))/(tspan2(i+1)-tspan2(i));
+end
+
+% Fits a Polynomial to the pitching angle time history
+printf('Polynomial fit of optimal pitching angle time history, coefficients:');
+p = polyfit(StageDynamics(:,9),(StageDynamics(:,4)+StageDynamics(:,4)),5)
+fflush(stdout);
+
 
 % Calculate Runtime
 t2 = cputime;

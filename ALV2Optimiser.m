@@ -191,7 +191,7 @@ function constraints = const(dalphadt)
   hend = StageDynamics(end,1);
   global rTarget
 %  constraints = [hend-rTarget];
-  constraints = [hend-rTarget StageDynamics(end,4)];
+  constraints = [hend-rTarget; StageDynamics(end,4)];
 endfunction
 
 % function to define maximum altitude, this helps to guide the rocket into the correct orbital position
