@@ -1,7 +1,7 @@
 % Created by Sholto Forbes 15/7/16
 % Single shooting routine for the calculation of ALV-2 orbital trajectories
 
-function [StageDynamics x tspan1 prepitch tspan2 postpitch] = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,Guess, optim)
+function [StageDynamics x tspan1 prepitch tspan2 postpitch] = ALV2Optimiser(icond,vehicle,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,Guess, optim)
 
 h0_prepitch = icond.h0_prepitch;
 xi0_prepitch = icond.xi0_prepitch;
@@ -9,20 +9,21 @@ phi0_prepitch = icond.phi0_prepitch;
 gamma0_prepitch = icond.gamma0_prepitch;
 zeta0_prepitch = icond.zeta0_prepitch;
    
-mFirstStage = 480; %(kg)  %Total lift-off mass
-mFirstStageFuel = 1600;  %(kg)  %mass of the fuel
+mFirstStage = vehicle.mFirstStage;
+mFirstStageFuel = vehicle.mFirstStageFuel;
 global mSecondStage
-mSecondStage = 228;
-mSecondStageFuel = 930;
-mThirdStage = 40;
-mThirdStageFuel = 145;
-mPayload = 18 + 7;
 
-mTotal = mFirstStage*4 + mFirstStageFuel*4 + mSecondStage + mSecondStageFuel + mThirdStage + mThirdStageFuel + mPayload;
+mSecondStage = vehicle.mSecondStage;
+mSecondStageFuel = vehicle.mSecondStageFuel;
+mThirdStage = vehicle.mThirdStage;
+mThirdStageFuel = vehicle.mThirdStageFuel;
+mPayload = vehicle.mPayload;
 
-mdotFirstStage = 16.39;
-mdotSecondStage = 3.952;
-mdotThirdStage = 0.4744;
+mTotal = vehicle.mTotal;
+
+mdotFirstStage = vehicle.mdotFirstStage;
+mdotSecondStage = vehicle.mdotSecondStage;
+mdotThirdStage = vehicle.mdotThirdStage;
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Pre-Pitchover Simulation                         %
@@ -45,6 +46,7 @@ fflush(stdout);
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Post-Pitchover Simulation                        %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
+
 printf('Post-Pitch Running    ')
 fflush(stdout);
 
@@ -59,7 +61,7 @@ dalphadt = 0; % gravity turn, AoA=0
 
 printf('Complete    ')
 fflush(stdout);
- 
+
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Stage 2 + 3                                      %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
