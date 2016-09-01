@@ -1,4 +1,9 @@
 % Main ALV-2 Trajectory optimisation Routine
+
+% This optimises the rocket trajectory in Earth Centered Rotational coordinates
+% ie. to analyse end orbit, look at the velocity and inclination displayed last, rather than heading angle and velocity of rocket, which are Earth relative
+
+
 clear all
 clc
 t1 = cputime;
@@ -29,8 +34,8 @@ Guess = answer{11}; % Either set to 'Auto' for an automatically computed guess, 
 
 % Define Vehicle ===============================================================
 
-vehicle.mFirstStage = 480; %(kg)  %Total lift-off mass
-vehicle.mFirstStageFuel = 1600;  %(kg)  %mass of the fuel
+vehicle.mFirstStage = 480; %(kg) 
+vehicle.mFirstStageFuel = 1600;  %(kg) 
 
 vehicle.mSecondStage = 228;
 vehicle.mSecondStageFuel = 930;
@@ -43,7 +48,6 @@ vehicle.mTotal = vehicle.mFirstStage*4 + vehicle.mFirstStageFuel*4 + vehicle.mSe
 vehicle.mdotFirstStage = 16.39;
 vehicle.mdotSecondStage = 3.952;
 vehicle.mdotThirdStage = 0.4744;
-
 
 
 % Compute Pitchover Angle ======================================================
@@ -67,28 +71,28 @@ else
   Guess = str2num(answer{11}); %Input Guess Pitching Angle, rad
 end
 
-
-
 % Call Optimisaion Function ----------------------------------------------------
 [StageDynamics x tspan1 prepitch tspan2 postpitch] = ALV2Optimiser(icond,vehicle,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,pitchover_angle,Guess,'Opt');
 
-%if strcmp(PAO,'NO') == 1 % No pitching angle optimisation
-%
-%elseif strcmp(PAO,'YES') == 1 % No pitching angle optimisation
-%  max_v = 0;
-%  for i = 1:0.5:5
-%    [temp1 temp2 temp3 temp4 temp5 temp6] = ALV2Optimiser(icond,rTarget,SecondStagedt,ThirdStagedt,prepitch_time,i,Guess,'Opt');
-%    if temp(end,2) > max_v
-%      max_v = temp(end,2)
-%      StageDynamics = temp1;
-%      x = temp2;
-%      tspan1 = temp3;
-%      prepitch = temp4;
-%      tspan2 = temp5;
-%      postpitch = temp6;
-%    end
-%  end
-%end
+Omega_E = 7.2921e-5 ; % rotation rate of the Earth rad/s
+
+v = StageDynamics(end,2);
+
+zeta = StageDynamics(end,8);
+
+rEarth = 6.3674447e6;  %(m) radius of earth
+
+r = StageDynamics(end,1) + rEarth ;
+
+phi = StageDynamics(end,7);
+
+fprintf('Orbital Velocity and inclination');
+
+vexo = sqrt((v*sin(zeta))^2 + (v*cos(zeta) + r*Omega_E*cos(phi))^2) %Change coordinate system when exoatmospheric, add velocity component from rotation of the Earth
+
+inc = asin(v*sin(pi-zeta)/vexo)  % orbit inclination angle
+
+
 
 % Guidance Output ------------------------------------------------------------
 % Numerical Differentiation of pitching angle, to obtain first stage pitch rate

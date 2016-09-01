@@ -23,7 +23,6 @@ mdotFirstStage = vehicle.mdotFirstStage;
 mdotSecondStage = vehicle.mdotSecondStage;
 mdotThirdStage = vehicle.mdotThirdStage;
 
-
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
 %                        Pre-Pitchover Simulation                         %
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
@@ -41,7 +40,6 @@ tspan1 = [0:prepitch_time]; % prepitch time
 prepitch0 = [h0_prepitch, v0_prepitch, m0_prepitch, gamma0_prepitch, 0, xi0_prepitch, phi0_prepitch, zeta0_prepitch];
 
 [prepitch] = lsode(@(prepitch,t) rocketDynamics(prepitch,t,0,phase,tspan1), prepitch0, tspan1);  
- 
 
 
 %~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%
